@@ -1,0 +1,49 @@
+-------------------------------------------------------------
+/*WHERE 1 */
+SELECT
+  COUNT(DISTINCT fullVisitorId) as cantidad
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw` s1
+WHERE
+  s1.date = '20170801';
+------------------------------------------------------------- 
+/*AND */
+SELECT COUNT(1) as cant_transacciones
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw` s1
+WHERE
+  s1.country = 'United States'
+  and s1.productRevenue is not null;  
+------------------------------------------------------------- 
+/*OR */
+SELECT v2ProductCategory AS categoria,
+        count(1) as cant_transacciones,
+        sum(productRevenue) as ganancia
+FROM `data-to-insights.ecommerce.all_sessions_raw` 
+where v2ProductCategory = 'Office' or v2ProductCategory = 'Electronics'
+group by v2ProductCategory
+-------------------------------------------------------------
+/*LIKE*/
+SELECT count(1) as cantidad_visitas,
+       country 
+FROM `data-to-insights.ecommerce.all_sessions_raw` 
+where country like 'P%'
+group by country;
+-------------------------------------------------------------
+/*IN*/
+SELECT count(1) as cantidad_visitas,
+       country 
+FROM `data-to-insights.ecommerce.all_sessions_raw` 
+where country in ('Peru','Chile')
+group by country;
+-------------------------------------------------------------
+/*BETWEEN*/
+
+SELECT count(1) as cantidad_visitas,
+       productSKU,
+       v2ProductName
+FROM `data-to-insights.ecommerce.all_sessions_raw` 
+where productquantity between 500 and 1000
+group by productSKU,
+       v2ProductName order by 1 desc;
+-------------------------------------------------------------

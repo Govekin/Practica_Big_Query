@@ -1,0 +1,3 @@
+bq query --destination_table data-finanzas:area_comercial_ventas.employee_backup --replace --use_legacy_sql=false 'SELECT * FROM area_comercial_ventas.employee';
+
+bq query --use_legacy_sql=false 'drop table area_comercial_ventas.tipo_documento_persona';	

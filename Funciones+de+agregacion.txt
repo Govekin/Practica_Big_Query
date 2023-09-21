@@ -1,0 +1,58 @@
+-------------------------------------------------------------
+/*COUNT*/  
+------------------------------------------------------------- 
+SELECT count(1) as cant_visitas
+FROM `data-to-insights.ecommerce.all_sessions_raw`;
+
+-------------------------------------------------------------
+/*COUNTIF */  
+-------------------------------------------------------------
+
+SELECT COUNTIF(productrevenue > 0 ) as cant_visitas_revenue
+FROM `data-to-insights.ecommerce.all_sessions_raw`;
+
+-------------------------------------------------------------
+/*SUM */  
+-------------------------------------------------------------
+SELECT
+  v2ProductCategory as product_category,
+  count(1) as cant_visitas,
+  sum(transactions) as transactions,
+  sum(totaltransactionrevenue) as total_transaction_revenue,
+  sum(productrevenue) AS monto_visitas_revenue
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw`
+GROUP BY product_category  ORDER BY 5 DESC;
+-------------------------------------------------------------
+-------------------------------------------------------------
+/*MAX */  
+-------------------------------------------------------------
+SELECT
+  v2ProductCategory as product_category,
+  MAX(date) as maxima_fecha_visita,
+  MAX(productquantity) as productquantity
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw`
+GROUP BY v2ProductCategory ;
+-------------------------------------------------------------
+/*MIN */  
+------------------------------------------------------------- 
+SELECT
+  v2ProductCategory as product_category,
+  MIN(stockLevel)
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw` session
+JOIN `data-to-insights.ecommerce.products` product 
+ON(session.productSKU = product.SKU)
+GROUP BY v2ProductCategory 
+ORDER BY 2 DESC;
+-------------------------------------------------------------
+/*AVG */  
+-------------------------------------------------------------
+SELECT
+  date as fecha_visita,
+  AVG(productRevenue) as productQuantity
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw` session
+GROUP BY date 
+ORDER BY 1 DESC, 2 DESC;

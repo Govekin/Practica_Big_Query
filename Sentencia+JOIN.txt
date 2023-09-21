@@ -1,0 +1,96 @@
+-------------------------------------------------------------
+/*INNER JOIN */
+------------------------------------------------------------- 
+SELECT
+  session.fullVisitorId,
+  product.sentimentScore 
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw` session
+JOIN
+  `data-to-insights.ecommerce.products` product
+ON
+  (session.productSKU = product.SKU)
+ORDER BY 2 DESC
+LIMIT 10;
+-------------------------------------------------------------
+SELECT
+COUNT(1)
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw` session
+JOIN
+  `data-to-insights.ecommerce.products` product
+ON
+  (session.productSKU = product.SKU);
+-------------------------------------------------------------
+/*LEFT JOIN*/
+SELECT
+  session.fullVisitorId,
+  product.sentimentScore 
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw` session
+LEFT JOIN
+  `data-to-insights.ecommerce.products` product
+ON
+  (session.productSKU = product.SKU)
+WHERE product.SKU is null
+ORDER BY 2 DESC
+LIMIT 10;
+-------------------------------------------------------------
+SELECT
+COUNT(1)
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw` session
+LEFT JOIN
+  `data-to-insights.ecommerce.products` product
+ON
+  (session.productSKU = product.SKU);
+-------------------------------------------------------------
+/*RIGHT JOIN*/
+-------------------------------------------------------------
+SELECT
+  session.fullVisitorId,
+  product.sentimentScore 
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw` session
+RIGHT JOIN
+  `data-to-insights.ecommerce.products` product
+ON
+  (session.productSKU = product.SKU)
+WHERE session.productSKU is null
+ORDER BY 2 DESC
+LIMIT 10;
+-------------------------------------------------------------
+SELECT
+COUNT(1)
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw` session
+RIGHT JOIN
+  `data-to-insights.ecommerce.products` product
+ON
+  (session.productSKU = product.SKU);
+-------------------------------------------------------------
+-------------------------------------------------------------
+/*FULL OUTER JOIN*/
+-------------------------------------------------------------
+SELECT 
+ifnull(peru.fullvisitorid,chile.fullvisitorid) as fullvisitorid,
+ifnull(peru.channelgrouping,chile.channelgrouping) as channelgrouping,
+ifnull(peru.country,chile.country) as country
+FROM
+(SELECT * FROM `data-to-insights.ecommerce.all_sessions_raw` where country = 'Peru') peru
+FULL OUTER JOIN
+(SELECT * FROM `data-to-insights.ecommerce.all_sessions_raw` where country = 'Chile') chile
+ON(peru.fullvisitorid = chile.fullvisitorid);
+-------------------------------------------------------------
+/*CROSS JOIN*/
+-------------------------------------------------------------
+SELECT 
+product_a.sku as sku_a,
+product_a.name as name_a,
+product_a.orderedquantity as orderedquantity_a,
+product_b.name as name_b,
+product_b.orderedquantity as  orderedquantity_b
+FROM `data-to-insights.ecommerce.products` product_a
+CROSS JOIN `data-to-insights.ecommerce.products` product_b
+WHERE product_a.sku = 'GGOEWAEA083899'
+-------------------------------------------------------------

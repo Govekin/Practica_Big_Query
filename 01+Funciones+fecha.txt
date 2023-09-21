@@ -1,0 +1,85 @@
+-------------------------------------------------------------
+/*Funciones Fecha de Servidor */
+------------------------------------------------------------- 
+SELECT
+  CURRENT_DATE() AS dia_actual,
+  CURRENT_DATETIME () as anio_mes_dia_hora_minuto_segundo,
+  CURRENT_TIMESTAMP () as anio_mes_dia_hora_minuto_segundo_zona_horaria;
+-------------------------------------------------------------
+/*EXTRACT() */  
+-------------------------------------------------------------
+SELECT EXTRACT(DAY FROM DATE '2013-12-25') as the_day;
+
+SELECT
+  vendor_id,
+  cast(pickup_datetime as DATE) as pickup_date,
+  EXTRACT(DAY FROM cast(pickup_datetime as date)) as day,
+  EXTRACT(MONTH FROM cast(pickup_datetime as date)) as month,
+  EXTRACT(YEAR FROM cast(pickup_datetime as date)) as year,
+  total_amount
+FROM
+  `data-to-insights.taxi.tlc_yellow_trips_2018_sample`
+  order by 2 asc;
+
+-------------------------------------------------------------
+/*DATE_ADD() */
+-------------------------------------------------------------
+SELECT
+  vendor_id,
+  cast(pickup_datetime as DATE) as pickup_date,
+  DATE_ADD( cast(pickup_datetime as DATE),  INTERVAL 5 year) as pickup_date_six_year,
+  total_amount
+FROM
+  `data-to-insights.taxi.tlc_yellow_trips_2018_sample`
+  order by 2 asc;  
+------------------------------------------------------------- 
+/*DATE() */
+------------------------------------------------------------- 
+SELECT
+  vendor_id,
+  date(pickup_datetime) as pickup_date,
+  pickup_datetime,
+  dropoff_datetime,
+  total_amount
+FROM
+  `data-to-insights.taxi.tlc_yellow_trips_2018_sample`
+   order by 2 asc;
+------------------------------------------------------------- 
+/*DATE_DIF() */
+-------------------------------------------------------------
+SELECT
+  vendor_id,
+  cast(pickup_datetime as DATE) as pickup_date,
+  cast(dropoff_datetime as DATE) AS dropoff_date,
+  DATE_DIFF(  cast(dropoff_datetime as DATE),cast(pickup_datetime as DATE), DAY) as travel_duration,
+  total_amount
+FROM
+  `data-to-insights.taxi.tlc_yellow_trips_2018_sample`
+  order by 2 asc;
+
+-------------------------------------------------------------
+/*DATE_TRUNC() */
+------------------------------------------------------------- 
+SELECT
+  vendor_id,
+  date(pickup_datetime) as pickup_date,
+  date_trunc(date(pickup_datetime),month) as pickup_month,
+  date_trunc(date(pickup_datetime),year) as pickup_year,
+  total_amount
+FROM
+  `data-to-insights.taxi.tlc_yellow_trips_2018_sample`
+   order by 2 asc;
+------------------------------------------------------------- 
+/*FORMAT_DATE() */
+SELECT 
+FORMAT_DATE("%x", DATE "2008-12-25") as us_formati,
+FORMAT_DATE("%b-%d-%Y", DATE "2008-12-25") as mes_formato,
+FORMAT_DATE("%b %Y", DATE "2008-12-25") as mes_anio_formato;
+------------------------------------------------------------- 
+/*PARSE_DATE Y PARSE_DATETIME() */
+
+SELECT 
+PARSE_DATE('%m/%d/%Y', '8/30/2018') AS date,
+PARSE_DATETIME('%m/%d/%Y %I:%M:%S %p', '8/30/2018 2:23:38 PM')AS datetime
+-------------------------------------------------------------
+

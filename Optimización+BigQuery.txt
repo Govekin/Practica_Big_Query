@@ -1,0 +1,100 @@
+----------------------------------------------------------------
+/*PARTICION POR FECHA*/
+----------------------------------------------------------------
+CREATE OR REPLACE TABLE `data-finanzas.area_comercial_ventas.venta_diaria` 
+(
+date date,
+invoice_and_item_number string,
+store_number string,
+store_name string ,
+item_number string ,
+item_description string ,
+sale_dollars float64
+)
+PARTITION BY date;
+----------------------------------------------------------------
+insert into `data-finanzas.area_comercial_ventas.venta_diaria` 
+(
+date,
+invoice_and_item_number,
+store_number,
+store_name,
+item_number,
+item_description,
+sale_dollars
+)
+SELECT 
+sale.date,
+sale.invoice_and_item_number,
+sale.store_number,
+sale.store_name,
+sale.item_number,
+sale.item_description,
+sale.sale_dollars
+FROM `bigquery-public-data.iowa_liquor_sales.sales` sale
+WHERE sale.date >= '2020-09-01' 
+and sale.date < '2020-10-01';
+----------------------------------------------------------------
+/*CLUSTERING*/
+----------------------------------------------------------------
+CREATE OR REPLACE TABLE `data-finanzas.area_comercial_ventas.venta_diaria_producto` 
+(
+date date,
+invoice_and_item_number string,
+store_number string,
+store_name string ,
+item_number string ,
+item_description string ,
+sale_dollars float64
+)
+PARTITION BY (date)
+CLUSTER BY store_name,item_number,item_description;
+----------------------------------------------------------------
+----------------------------------------------------------------
+insert into `data-finanzas.area_comercial_ventas.venta_diaria_producto` 
+(
+date,
+invoice_and_item_number,
+store_number,
+store_name,
+item_number,
+item_description,
+sale_dollars
+)
+SELECT 
+sale.date,
+sale.invoice_and_item_number,
+sale.store_number,
+sale.store_name,
+sale.item_number,
+sale.item_description,
+sale.sale_dollars
+FROM `bigquery-public-data.iowa_liquor_sales.sales` sale
+WHERE sale.date >= '2020-01-01' 
+and sale.date < '2020-10-01';
+----------------------------------------------------------------
+/*VISTAS MATERIALIZADAS*/
+----------------------------------------------------------------
+CREATE OR REPLACE MATERIALIZED VIEW `data-finanzas.area_comercial_ventas.vm_venta_punto_venta` 
+OPTIONS (enable_refresh = true, 
+				refresh_interval_minutes = 60)
+AS
+WITH venta_agregada AS
+(
+	SELECT  venta.date,
+			venta.invoice_and_item_number,
+			venta.store_number,
+			venta.store_name,
+			venta.item_number,
+			venta.item_description,
+			sum(venta.sale_dollars) as total_sale_dollars
+	FROM `data-finanzas.area_comercial_ventas.venta_diaria_producto`  AS venta
+	GROUP BY venta.date,
+			venta.invoice_and_item_number,
+			venta.store_number,
+			venta.store_name,
+			venta.item_number,
+			venta.item_description
+)
+SELECT * FROM venta_agregada;
+----------------------------------------------------------------

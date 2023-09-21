@@ -1,0 +1,35 @@
+-------------------------------------------------------------
+/*CAST */
+------------------------------------------------------------- 
+SELECT
+  raw.date,
+  raw.fullVisitorId,
+  raw.time AS time_number,
+  CAST(raw.time AS string) time_string,
+  raw.productrevenue AS productrevenue,
+  CONCAT("$",CAST(raw.productrevenue AS string)) AS productrevenue_string
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw` raw
+WHERE productrevenue IS NOT NULL
+------------------------------------------------------------- 
+SELECT
+  vendor_id,
+  pickup_datetime,
+  CAST(pickup_datetime AS date) AS pickup_date,
+  dropoff_datetime,
+  passenger_count,
+  trip_distance
+FROM
+  `data-to-insights.taxi.tlc_yellow_trips_2018_sample`
+LIMIT 1000
+------------------------------------------------------------- 
+/*SAFE_CAST*/
+-------------------------------------------------------------
+SELECT 
+fullvisitorid,
+date,
+city,
+channelgrouping,
+time,
+safe_cast(city as int64) as city_number
+FROM `data-to-insights.ecommerce.all_sessions_raw` LIMIT 1000

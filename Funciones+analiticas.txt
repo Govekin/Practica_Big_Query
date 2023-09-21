@@ -1,0 +1,90 @@
+----------------------------------------------------------------------------
+/*over()*/
+----------------------------------------------------------------------------
+SELECT 
+date,
+store_name,
+city,
+invoice_and_item_number,
+item_description,
+sale_dollars,
+sum(sale_dollars) over() as total_sale_dollars
+FROM `bigquery-public-data.iowa_liquor_sales.sales` where date = '2020-09-30';
+----------------------------------------------------------------------------
+SELECT 
+date,
+store_name,
+city,
+invoice_and_item_number,
+item_description,
+sale_dollars,
+sum(sale_dollars) over() as total_sale_dollars,
+(sale_dollars / sum(sale_dollars) over())*100  as participacion_venta
+FROM `bigquery-public-data.iowa_liquor_sales.sales` where date = '2020-09-30' order by sale_dollars desc;
+----------------------------------------------------------------------------
+/*partition by()*/
+----------------------------------------------------------------------------
+SELECT 
+date,
+store_name,
+city,
+invoice_and_item_number,
+item_description,
+sale_dollars,
+sum(sale_dollars) over(partition by store_name) as total_sale_dollars_store
+FROM `bigquery-public-data.iowa_liquor_sales.sales` where date = '2020-09-30';
+----------------------------------------------------------------------------
+/*order by()*/
+----------------------------------------------------------------------------
+SELECT 
+date,
+store_name,
+city,
+invoice_and_item_number,
+item_description,
+sale_dollars,
+RANK() OVER (partition by store_name ORDER BY sale_dollars DESC) AS rank
+FROM `bigquery-public-data.iowa_liquor_sales.sales` 
+where date = '2020-09-30';
+----------------------------------------------------------------------------
+/*rank*/
+SELECT 
+date,
+store_name,
+city,
+invoice_and_item_number,
+item_description,
+sale_dollars,
+RANK() OVER (partition by item_description ORDER BY sale_dollars DESC) AS rank
+FROM `bigquery-public-data.iowa_liquor_sales.sales` 
+where date = '2020-09-30';
+----------------------------------------------------------------------------
+/*DENSE_RANK*/
+SELECT
+  date,
+  store_name,
+  item_description,
+  sale_dollars,
+  DENSE_RANK() OVER (PARTITION BY store_name 
+                    ORDER BY sale_dollars DESC) AS rank
+FROM
+  `bigquery-public-data.iowa_liquor_sales.sales`
+WHERE
+  date = '2020-09-30'
+ORDER BY
+  county DESC;
+----------------------------------------------------------------------------
+/*ROW_NUMBER*/
+SELECT
+  date,
+  store_name,
+  item_description,
+  sale_dollars,
+  ROW_NUMBER() OVER (PARTITION BY store_name 
+                    ORDER BY sale_dollars DESC) AS rank
+FROM
+  `bigquery-public-data.iowa_liquor_sales.sales`
+WHERE
+  date = '2020-09-30'
+ORDER BY
+  county DESC;  

@@ -1,0 +1,187 @@
+-----------------------------------------------
+/*Bloque de codigo*/
+BEGIN
+LOGICA_INTERNA_PROCEDMIENTO
+
+END
+-----------------------------------------------
+/*el declare nos sirve para declarar variables*/
+declare v_process_date date;
+declare v_start_date datetime;
+declare v_end_date string;
+declare v_place_type string;
+declare v_status_activo string;
+declare v_status_desactivo string;
+declare v_source_system string;
+-----------------------------------------------
+/*Inicializando variables*/
+set v_start_date= current_datetime();
+set v_process_date= current_date();
+set v_end_date = '2099-12-31';
+set v_place_type = 'STORE';
+set v_status_activo = 'ACTIVO';
+set v_status_desactivo = 'DESACTIVO';
+set v_source_system = 'PUBS';
+-----------------------------------------------
+/*dropeando temporales del proceso*/
+execute immediate ('drop table if exists area_comercial_ventas.tmp_load_store');
+execute immediate ('drop table if exists area_comercial_ventas.tmp_load_store_upd_ver');
+
+/*ejemplo */
+
+/*CREACION DE ESTRUCTURAS*/
+---------------------------------------------------------------------
+CREATE OR REPLACE TABLE area_comercial_ventas.t_sale
+(
+process_date  date options(description="Fecha de procesamiento de datos para la extracción"),  
+sale_date date NOT NULL options(description="Fecha de venta"),
+sale_id string NOT NULL options(description="Código identificador de la transacción de orden de venta aprobada"),
+place_id string options(description="Código identificador del lugar de venta"), 
+place_name string options(description="Nombre del lugar de venta. Oficina, Almacen"), 
+pay_terms_id string options(description="Código identificador del Método de pago"), 
+pay_terms string options(description="Método de pago"), 
+product_item_id string options(description="Identificador del item del producto"), 
+product_item_description string options(description="Item del producto"), 
+product_item_quantity int64 options(description="Cantidad del item del producto"), 
+product_item_price float64 options(description="Precio en que fue vendido el item"), 
+product_item_discount float64 options(description="Monto de descuento del item"), 
+product_id string options(description="Código identificador del producto"), 
+product_name string options(description="Nombre del producto"), 
+publisher_id string options(description="Identificador de la editorial"), 
+publisher_name string options(description="Identificador de la editorial"), 
+source_system string options(description="Sistema origen de los datos"),
+load_date datetime options(description="Fecha y hora de inserción del registro en el modelo"),
+creation_user string options(description="Usuario que crea el registro")
+)
+PARTITION BY process_date 
+options 
+(
+	description = "Estructura que almacena las transacciones de venta concretada de la empresa. Se consideran los canales online y offline"
+);
+
+/*
+PREREQUISITOS:
+crear tablas:
+-sales
+-titles
+-publishers
+*/
+
+---------------------------------------------------------------------
+---------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE area_comercial_ventas.load_t_sale(v_process_date date)
+/*@Description: Carga las transacciones de venta de productos de la empresa 
+	la tabla está particionada por process_date que corresponde a la fecha de venta
+  @author: Cesar Aldana
+  @version: 1.0
+  @Data Mapping version: 
+*/
+-----------------------------------------------
+/*inicio de declaraciones BigQuery*/
+BEGIN
+-----------------------------------------------
+/*el declare nos sirve para declarar variables*/
+declare v_source_system string;
+-----------------------------------------------
+/*Inicializando variables*/
+set v_source_system = 'PUBS';
+--set v_process_date = current_date() -1 ;/*ventas del dia anterior*/
+-----------------------------------------------
+/*dropeando temporales del proceso*/
+execute immediate ('drop table if exists area_comercial_ventas.tmp_load_sale');
+-----------------------------------------------
+/*tabla con transformaciones y reglas de carga.
+el campo 
+*/
+-----------------------------------------------
+create or replace table area_comercial_ventas.tmp_load_sale AS 
+WITH tmp_base_venta_diaria AS
+(
+	select * from `data-finanzas.area_comercial_ventas.sales` sale 
+	where cast(sale.ord_date as date) =  v_process_date
+),
+tmp_sale AS 
+(
+	select 
+		v_process_date as process_date,
+		cast(sales.ord_date as date) as sale_date,
+		sales.ord_num as sale_id,
+		upper(sales.payterms) as pay_terms_id,
+		upper(sales.payterms) as pay_terms,
+		sales.title_id as product_item_id,
+		upper(titles.title) as product_item_description,
+		sales.qty as product_item_quantity,
+		cast(titles.price as float64) as product_item_price,
+		titles.type as product_id,
+		titles.type as product_name,
+		cast(titles.pub_id as string) as publisher_id,
+		publishers.pub_name as publisher_name,
+		v_source_system as source_system,
+		current_datetime() AS load_date,
+		session_user() AS creation_user
+	from tmp_base_venta_diaria sales
+	left join `data-finanzas.area_comercial_ventas.titles` titles on(sales.title_id = titles.title_id)
+	left join `data-finanzas.area_comercial_ventas.publishers` publishers on(cast(titles.pub_id as string) = cast(publishers.pub_id as string))
+)
+select * from tmp_sale;
+-----------------------------------------------
+/*trunca la particion de carga*/
+-----------------------------------------------
+delete from area_comercial_ventas.t_sale where process_date = v_process_date;
+-----------------------------------------------
+-----------------------------------------------
+/*insertando nuevos registros (place_id nuevo)*/
+-----------------------------------------------
+insert into area_comercial_ventas.t_sale
+(
+	process_date,	
+	sale_date,
+	sale_id,
+	pay_terms_id,
+	pay_terms,
+	product_item_id,
+	product_item_description,
+	product_item_quantity,
+	product_item_price,
+	product_item_discount,
+	product_id,
+	product_name,
+	publisher_id,
+	publisher_name,
+	source_system,
+	load_date,
+	creation_user
+)
+select 
+	process_date,	
+	sale_date,
+	sale_id,	
+	pay_terms_id,
+	pay_terms,
+	product_item_id,
+	product_item_description,
+	product_item_quantity,
+	product_item_price,
+	NULL AS product_item_discount,
+	product_id,
+	product_name,
+	publisher_id,
+	publisher_name,
+	source_system,
+	load_date,
+	creation_user
+from area_comercial_ventas.tmp_load_sale sale;
+-----------------------------------------------
+END;
+--Llamamos al SP
+-----------------------------------------------
+CALL area_comercial_ventas.load_t_sale('2020-10-18');
+
+-----------------------------------------------
+
+select * from area_comercial_ventas.t_sale;
+
+
+
+
+

@@ -1,0 +1,102 @@
+/*SELECT COLUMNAS*/
+SELECT
+date,
+country,
+fullvisitorid,
+productsku,
+productprice
+FROM `data-to-insights.ecommerce.all_sessions_raw`;
+
+/*SELECT **/
+SELECT * FROM `data-to-insights.ecommerce.all_sessions_raw`;
+
+/*LIMIT*/
+SELECT fullvisitorid,country,city FROM `data-to-insights.ecommerce.all_sessions_raw` limit 5;
+
+
+/*FROM **/
+SELECT count(1) as cant,
+  sentimentScore
+FROM `data-to-insights.ecommerce.all_sessions_raw` session
+JOIN `data-to-insights.ecommerce.products` product on(session.productSKU = product.SKU)
+group by sentimentScore
+order by 2 desc;
+
+/*DISTINCT */
+SELECT DISTINCT * FROM `data-to-insights.ecommerce.all_sessions_raw` ;
+
+/*IFNULL */
+SELECT 
+fullvisitorid,
+channelgrouping,
+country,
+city,
+ifnull(pagetitle,'Por Definir') as pagetitle
+FROM `data-to-insights.ecommerce.all_sessions_raw`
+where pagetitle is null;
+
+
+/*EXCEPT*/
+SELECT * EXCEPT(fullvisitorid,chhanelgrouping)  FROM `data-to-insights.ecommerce.all_sessions_raw`;
+
+/*INTERSECT */
+SELECT fullVisitorId FROM `data-to-insights.ecommerce.all_sessions_raw` s1 where s1.country = 'United States'
+INTERSECT DISTINCT
+SELECT fullVisitorId FROM `data-to-insights.ecommerce.all_sessions_raw` s2 where s2.country = 'Canada';
+
+
+/*REPLACE */
+SELECT * replace("Perú" as country) FROM `data-to-insights.ecommerce.all_sessions_raw` where country ='Peru';
+
+/*UNION ALL*/
+SELECT fullvisitorid,country,'all_sessions' as fuente,date  FROM `data-to-insights.ecommerce.all_sessions` where fullvisitorid ='4801213629825609918'
+UNION ALL
+SELECT fullvisitorid,country,'all_sessions_raw' as fuente,date FROM `data-to-insights.ecommerce.all_sessions_raw` where fullvisitorid ='4801213629825609918' 
+
+/*ALIAS COLUMNA Y TABLA*/
+SELECT
+  visitas.fullvisitorid AS codigo_visitante,
+  visitas.country as pais,
+  visitas.date as fecha_visita
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw` as visitas
+WHERE
+  visitas.fullvisitorid ='4801213629825609918';
+
+/*WITH*/
+WITH base_visitas_20170801 AS 
+(
+  SELECT
+    visitas.fullvisitorid AS codigo_visitante,
+    visitas.country as pais,
+    visitas.date as fecha_visita,
+    visitas.productSKU as codigo_producto,
+    visitas.v2ProductName as nombre_producto,
+    visitas.productPrice as precio_producto,
+    visitas.productquantity as cantidad_producto
+  FROM `data-to-insights.ecommerce.all_sessions_raw` as visitas 
+  WHERE visitas.date ='20170801'
+)
+
+SELECT * FROM base_visitas_20170801;
+
+
+/*SUBCONSULTAS */
+SELECT count(distinct fullVisitorId) FROM `data-to-insights.ecommerce.all_sessions_raw` s1 WHERE s1.country = 'United States'
+AND EXISTS(
+SELECT 1 FROM `data-to-insights.ecommerce.all_sessions_raw` s2 WHERE s2.country = 'Canada'
+AND s1.fullVisitorId = s2.fullVisitorId);
+
+
+/*ORDER BY POR NOMBRE COLUMNA Y POR POSICION*/
+SELECT v2ProductCategory as categoria_producto,
+       count(1) as cantidad_visitas
+FROM `data-to-insights.ecommerce.all_sessions_raw`
+group by v2ProductCategory
+order by cantidad_visitas desc;
+
+
+
+
+
+

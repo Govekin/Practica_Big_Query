@@ -1,0 +1,130 @@
+
+---------------------------------------------------------------------------
+/*1. crear catalogo para datos sensibles*/
+CREATE OR REPLACE TABLE area_comercial_ventas.datos_sensibles
+(
+id	int64 NOT NULL,	
+nombre_atributo	STRING,	
+llave_encriptacion bytes
+)
+options 
+(
+  description = "Catálogo de datos encriptados"
+);
+---------------------------------------------------------------------------
+/*2. insert catalogo de datos sensibles*/
+INSERT INTO area_comercial_ventas.datos_sensibles
+(id,	
+nombre_atributo,	
+llave_encriptacion
+)
+SELECT 1 as id,
+'Nombre' as nombre_atributo,
+KEYS.NEW_KEYSET('AEAD_AES_GCM_256') AS llave_encriptacion 
+union all 
+SELECT 2 as id,
+'Celular' as nombre_atributo,
+KEYS.NEW_KEYSET('AEAD_AES_GCM_256') AS llave_encriptacion 
+union all
+SELECT 3 as id,
+'Dirección' as nombre_atributo,
+KEYS.NEW_KEYSET('AEAD_AES_GCM_256') AS llave_encriptacion 
+union all
+SELECT 4 as id,
+'Email' as nombre_atributo,
+KEYS.NEW_KEYSET('AEAD_AES_GCM_256') AS llave_encriptacion 
+---------------------------------------------------------------------------
+/*3. encriptar email*/
+---------------------------------------------------------------------------
+CREATE OR REPLACE TABLE
+  area_comercial_ventas.m_cliente_email AS
+SELECT
+  id,
+  ( AEAD.ENCRYPT((
+      SELECT
+        llave_encriptacion
+      FROM
+        area_comercial_ventas.datos_sensibles
+      WHERE
+        nombre_atributo = 'Email'),
+      --PARAMETRO 1: TABLA DE DATOS SENSIBLES.
+      UPPER(EmailAddress),
+      --PARAMETRO 2: CAMPO QUÉ SERÁ ENCRIPTADO
+      CAST(id AS STRING)  --PARAMETRO 3: TEXTO ADICIONAL, SE SUGIERE INGRESAR LA PK DE LA TABLA ORIGEN
+      ) ) AS email
+FROM
+  `data-to-insights.customer_insights.customer_web_data_cleaned`;
+---------------------------------------------------------------------------
+select * from `data-to-insights.customer_insights.customer_web_data_cleaned`
+where id =49429;
+---------------------------------------------------------------------------
+select * from area_comercial_ventas.m_cliente_email
+where id =49429;
+
+/*4. desencriptar email*/
+---------------------------------------------------------------------------
+--Para desencriptar (En vistas para los usuarios que tengan ciertos privilegios):
+CREATE OR REPLACE VIEW
+  area_comercial_ventas.v_cliente_email AS
+SELECT
+  id,
+  ( AEAD.DECRYPT_STRING((
+      SELECT
+        llave_encriptacion
+      FROM
+        area_comercial_ventas.datos_sensibles
+      WHERE
+        nombre_atributo = 'Email'),
+      --PARAMETRO 1: TABLA DE DATOS SENSIBLES.
+      email,
+      --PARAMETRO 2: CAMPO QUÉ SERÁ ENCRIPTADO
+      CAST(id AS STRING) 	  --PARAMETRO 3: TEXTO ADICIONAL, SE SUGIERE INGRESAR LA PK DE LA TABLA ORIGEN
+      )) AS email
+FROM
+  area_comercial_ventas.m_cliente_email
+
+---------------------------------------------------------------------------
+
+/*uccic empleado*/
+
+CREATE OR REPLACE VIEW `piloto-druid-spsa.mortiz_intercorp.dv_uccic_empleado`  AS
+SELECT 
+emp.codigo_tipo_documento,
+emp.descripcion_tipo_documento,
+emp.party_id,
+emp.primer_apellido as apellido_paterno,
+emp.segundo_apellido as apellido_materno,
+emp.nombres,
+emp.fecha_nacimiento,
+emp.edad,
+emp.fecha_ingreso,
+/*
+falta indi_desk
+falta cuenta_red
+(no se compartirá por el momento)
+*/
+emp.correo_corporativo,
+emp.cargo,
+emp.area_organizacion as unidad,
+emp.codigo_empresa_itc as id_empresa,
+emp.nombre_empresa_itc as desc_empresa,
+emp.party_id_jefe,
+emp.process_date as fecha_proceso,
+emp.genero as desc_sexo,
+emp.estado_civil as desc_estado_civil,
+emp.flag_club_intercorp as flag_inscrito_club,
+emp.flag_cuenta_sueldo as flag_cuenta_sueldo,
+emp.celular_inscripcion_club_itc,
+emp.correo_inscripcion_club_itc,
+emp.celular as celular_inscrito_colaborador,
+emp.correo_personal as correo_personal_inscrito_colaborador,
+emp.correo_corporativo as correo_corporativo_inscrito_colaborador,
+emp.fecha_inscripcion_club_itc
+FROM `piloto-druid-spsa.mortiz_intercorp.dv_empleado_sensitivo` emp
+WHERE 
+/*DATOS DE EMPLEADOS ACTIVOS Y LAS PERSONAS QUE HAN AUTORIZADO COMPARTIR SUS DATOS*/
+CAST(emp.flag_terminos_condiciones AS BOOL) = true 
+AND CAST(flag_politica_seguridad AS BOOL)  = true
+AND CAST(flag_politica_grupo_itc AS BOOL)  = true
+AND CAST(flag_estado_empleado AS BOOL)  = true
+AND hash_id = '26E56F18E933F8B140F4B122A32826A6F68F05D4D547B5882B90BDB251EF283D'

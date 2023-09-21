@@ -1,0 +1,134 @@
+-------------------------------------------------------------
+/*UPPER/LOWER/INITCAP */
+------------------------------------------------------------- 
+SELECT 
+  upper(upper(trim(name))) as product_mayuscula,
+  lower(upper(trim(name))) as product_minuscula,
+  initcap(upper(trim(name))) as proct_mayuscula_minuscula      
+FROM `data-to-insights.ecommerce.products` LIMIT 1000
+-------------------------------------------------------------
+/*CONCAT*/
+-------------------------------------------------------------
+SELECT 
+     concat(country,' - ',city) as pais_ciudad,
+     count(1) as cantidad_visitas, 
+FROM `data-to-insights.ecommerce.all_sessions_raw` 
+GROUP BY pais_ciudad order by 2 desc;
+-------------------------------------------------------------
+/*TRIM/LTRIM/RTRIM*/
+-------------------------------------------------------------
+SELECT 
+name as producto,
+trim(name) as producto_trim,
+trim(name,'A') as producto_excluir_A
+FROM `data-to-insights.ecommerce.products` LIMIT 1000
+-------------------------------------------------------------
+/*SUBSTR*/
+SELECT 
+distinct category,
+substr(category,6,LENGTH(category)) as lpad_category
+FROM `data-to-insights.ecommerce.categories` LIMIT 1000
+-------------------------------------------------------------
+/*LENGTH*/
+-------------------------------------------------------------
+SELECT 
+     length(country) as longitud_country,
+     length(city) as longitud_city
+FROM `data-to-insights.ecommerce.all_sessions_raw`
+GROUP BY country,city order by 1 desc;
+-------------------------------------------------------------
+/*LENGTH MAX Y MIN*/
+-------------------------------------------------------------
+SELECT 
+     max(length(country)) as max_longitud_country,
+     min(length(country)) as min_longitud_country,
+     max(length(city)) as max_longitud_city,
+     min(length(city)) as min_longitud_city
+FROM `data-to-insights.ecommerce.all_sessions_raw`;
+-------------------------------------------------------------
+/*LPAD/RPAD*/
+-------------------------------------------------------------
+SELECT 
+distinct category,
+lpad('Fun', 7, category) as lpad_category,
+rpad('Fun', 7, category) as rpad_category
+FROM `data-to-insights.ecommerce.categories` LIMIT 1000
+-------------------------------------------------------------
+/*REPLACE*/
+-------------------------------------------------------------
+SELECT
+  DISTINCT category,
+  REPLACE(category,"Home/", "") AS replace_home,
+  REPLACE (
+            REPLACE(category,"Home/", ""),
+            "/",
+            " "
+          )
+FROM `data-to-insights.ecommerce.categories`
+LIMIT 1000
+-------------------------------------------------------------
+/*REGEX*/
+-------------------------------------------------------------
+/*REGEXP_CONTAINS*/
+-------------------------------------------------------------
+SELECT
+  DISTINCT category,
+  REGEXP_CONTAINS(category,"Home/")
+FROM `data-to-insights.ecommerce.categories`
+LIMIT 1000;
+-------------------------------------------------------------
+SELECT
+  email,
+  REGEXP_CONTAINS(email, r"@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+") AS is_valid
+FROM
+  (SELECT
+    ["foo@example.com", "bar@example.org", "www.example.net"]
+    AS addresses),
+  UNNEST(addresses) AS email;
+-------------------------------------------------------------  
+SELECT
+  email,
+  REGEXP_CONTAINS(email, r"^([\w.+-]+@foo\.com|[\w.+-]+@bar\.org)$")
+    AS valid_email_address,
+  REGEXP_CONTAINS(email, r"^[\w.+-]+@foo\.com|[\w.+-]+@bar\.org$")
+    AS without_parentheses
+FROM
+  (SELECT
+    ["a@foo.com", "a@foo.computer", "b@bar.org", "!b@bar.org", "c@buz.net"]
+    AS addresses),
+  UNNEST(addresses) AS email;  
+-------------------------------------------------------------
+/*REGEXP_EXTRACT*/
+-------------------------------------------------------------
+WITH email_addresses AS
+  (SELECT "foo@example.com" as email
+  UNION ALL
+  SELECT "bar@example.org" as email
+  UNION ALL
+  SELECT "baz@example.net" as email)
+SELECT
+  email as full_email,
+  REGEXP_EXTRACT(email, r"^[a-zA-Z0-9_.+-]+") as user_name
+FROM email_addresses;
+-------------------------------------------------------------
+/*REGEXP_REPLACE*/
+-------------------------------------------------------------
+WITH markdown AS
+  (SELECT "# Heading" as heading
+  UNION ALL
+  SELECT "# Another heading" as heading)
+
+SELECT
+  REGEXP_REPLACE(heading, r"^# ([a-zA-Z0-9\s]+$)", "<h1>\\1</h1>")
+  AS html
+FROM markdown;
+-------------------------------------------------------------  
+/*FORMAT*/
+-------------------------------------------------------------
+SELECT 
+fullvisitorid,
+v2ProductName,
+productrevenue,
+FORMAT("%'d", productrevenue) as productrevenue_miles
+FROM `data-to-insights.ecommerce.all_sessions_raw` where productrevenue is not null
+-------------------------------------------------------------

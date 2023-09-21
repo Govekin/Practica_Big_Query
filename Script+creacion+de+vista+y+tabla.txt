@@ -1,0 +1,36 @@
+CREATE OR REPLACE TABLE area_comercial_ventas.tipo_documento_persona
+/*CREATE TABLE IF NOT EXISTS*/
+(
+codigo_tipo_documento int64 NOT NULL options(description="Código del tipo de documento de la persona"),
+tipo_documento string NOT NULL options(description="Tipo de documento de identidad de la persona"),
+sistema_origen string NOT NULL options(description="Descripción del sistema origen"),
+fecha_creacion timestamp  NOT NULL options(description="Fecha y hora de creación del registro"), 
+usuario_creacion string NOT NULL options(description="Usuario que crea el registro")
+)
+options 
+(
+  description = "Catálogo de los tipos de documento de la persona"
+);
+---------------------------------------------------------
+---------------------------------------------------------
+--cambia una tabla particionada para que siempre se busque por particion
+---------------------------------------------------------
+ALTER TABLE mydataset.mypartitionedtable
+SET OPTIONS (require_partition_filter=true)
+---------------------------------------------------------
+CREATE OR REPLACE VIEW area_comercial_ventas.v_persona AS
+select 
+pers.nro_documento,
+pers.codigo_tipo_documento,
+tip_pers.tipo_documento,
+pers.nombres,
+pers.apellidos,
+pers.edad,
+pers.genero,
+pers.fecha_nacimiento,
+pers.sistema_origen,
+pers.fecha_creacion
+from datacatalog.persona pers
+left join datacatalog.tipo_documento_persona tip_pers on(pers.codigo_tipo_documento = tip_pers.codigo_tipo_documento);
+---------------------------------------------------------
+---------------------------------------------------------

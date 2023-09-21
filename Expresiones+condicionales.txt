@@ -1,0 +1,73 @@
+-----------------------------------------------------
+/*CASE expression*/
+SELECT
+  CASE country
+    WHEN 'Chile' THEN 'America del Sur'
+    WHEN 'Colombia' THEN 'America del Sur'
+    WHEN 'Ecuador' THEN 'America del Sur'
+    WHEN 'Panama' THEN 'America del Sur'
+    WHEN 'Peru' THEN 'America del Sur'
+    ELSE 'Resto del Mundo'
+END
+  AS pacifico_sur_comercial,
+  country,
+  count(1) as cantidad_visitas
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw`
+group by pacifico_sur_comercial,
+country order by 2 asc
+-----------------------------------------------------
+/*CASE WHEN*/
+SELECT
+  CASE 
+   WHEN country = 'Chile' THEN 'America del Sur'
+   WHEN country =  'Colombia' THEN 'America del Sur'
+   WHEN country = 'Ecuador' THEN 'America del Sur'
+   WHEN country = 'Panama' THEN 'America del Sur'
+   WHEN country = 'Peru' THEN 'America del Sur'
+   ELSE 'Resto del Mundo'
+END
+  AS pacifico_sur_comercial,
+  country,
+  count(1) as cantidad_visitas
+FROM
+  `data-to-insights.ecommerce.all_sessions_raw`
+group by pacifico_sur_comercial,
+country order by 2 asc;
+---------------------------------------------------------
+/*IF*/
+---------------------------------------------------------
+SELECT 
+if(products.stocklevel > 0 ,'Hay Stock','No hay Stock') as stock_condicion,
+products.*
+FROM `data-to-insights.ecommerce.products` products
+---------------------------------------------------------
+/*IFNULL*/
+---------------------------------------------------------
+SELECT count(1), 
+       v2ProductCategory as session_categoria,
+       categories.category as product_categoria,
+        nullif(v2ProductCategory,categories.category) as comparacion_categoria
+FROM `data-to-insights.ecommerce.all_sessions_raw`  session
+join `data-to-insights.ecommerce.categories` categories on(session.productSKU = categories.productSKU)
+group by v2ProductCategory,
+       categories.category ,
+       comparacion_categoria;
+---------------------------------------------------------
+/*NULLIF*/
+---------------------------------------------------------
+SELECT count(1), 
+       v2ProductCategory as session_categoria,
+       categories.category as product_categoria,
+       nullif(v2ProductCategory,categories.category) as comparacion_categoria,
+       IFNULL(nullif(v2ProductCategory,categories.category),'MATCH') as comparacion_categoria_2
+FROM `data-to-insights.ecommerce.all_sessions_raw`  session
+join `data-to-insights.ecommerce.categories` categories on(session.productSKU = categories.productSKU)
+group by v2ProductCategory,
+       categories.category ,
+       comparacion_categoria,
+       comparacion_categoria_2;
+---------------------------------------------------------	 
+
+
+  
